@@ -1,0 +1,1220 @@
+<div class="analysis-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+
+    <div>
+
+      <h2>
+        Análisis
+      </h2>
+
+      <p>
+        Analiza commits con Inteligencia Artificial
+        y detecta posibles problemas en el código.
+      </p>
+
+    </div>
+
+
+    <div class="ai-badge">
+
+      Gemini AI
+
+    </div>
+
+  </div>
+
+
+  <!-- MAIN GRID -->
+  <div class="analysis-grid">
+
+
+    <!-- LEFT -->
+    <div class="analysis-config">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h3>
+            Configuración
+          </h3>
+
+          <span>
+            Selecciona qué deseas analizar.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!--
+        ANALYSIS TYPE
+      -->
+      <div class="form-group">
+
+        <label>
+          Tipo de análisis
+        </label>
+
+
+        <select
+          [(ngModel)]="analysisType"
+          [disabled]="analysisRunning">
+
+          <option value="commit">
+
+            Commit Review
+
+          </option>
+
+
+          <option value="impact">
+
+            Impact / Regression Analysis
+
+          </option>
+
+        </select>
+
+
+        @if (
+          analysisType ===
+          'commit'
+        ) {
+
+          <small class="analysis-type-description">
+
+            Analiza únicamente los cambios realizados
+            dentro del commit seleccionado.
+
+          </small>
+
+        }
+
+
+        @if (
+          analysisType ===
+          'impact'
+        ) {
+
+          <small
+            class="
+              analysis-type-description
+              impact-description
+            ">
+
+            Busca dependencias y código relacionado
+            dentro del proyecto para detectar posibles
+            regresiones fuera de los archivos modificados.
+
+          </small>
+
+        }
+
+      </div>
+
+
+      <!--
+        PROJECT
+      -->
+      <div class="form-group">
+
+        <label>
+          Proyecto
+        </label>
+
+
+        <select
+          [(ngModel)]="selectedProjectId"
+          [disabled]="
+            loadingProjects ||
+            analysisRunning
+          "
+          (ngModelChange)="
+            onProjectChange()
+          ">
+
+          @if (
+            loadingProjects
+          ) {
+
+            <option
+              [ngValue]="null">
+
+              Cargando proyectos...
+
+            </option>
+
+          }
+          @else {
+
+            @for (
+              project of projects;
+              track project.id
+            ) {
+
+              <option
+                [ngValue]="project.id">
+
+                {{ project.name }}
+
+              </option>
+
+            }
+
+          }
+
+        </select>
+
+      </div>
+
+
+      <!--
+        BRANCH
+      -->
+      <div class="form-group">
+
+        <label>
+          Rama
+        </label>
+
+
+        <select
+          [(ngModel)]="selectedBranch"
+          [disabled]="
+            loadingBranches ||
+            analysisRunning ||
+            branches.length === 0
+          "
+          (ngModelChange)="
+            onBranchChange()
+          ">
+
+          @if (
+            loadingBranches
+          ) {
+
+            <option value="">
+
+              Cargando ramas...
+
+            </option>
+
+          }
+          @else {
+
+            @for (
+              branch of branches;
+              track branch.name
+            ) {
+
+              <option
+                [value]="branch.name">
+
+                {{ branch.name }}
+
+              </option>
+
+            }
+
+          }
+
+        </select>
+
+      </div>
+
+
+      <!--
+        COMMIT
+      -->
+      <div class="form-group">
+
+        <div class="label-row">
+
+          <label>
+            Commit
+          </label>
+
+
+          <button
+            type="button"
+            class="refresh-button"
+            [disabled]="
+              loadingCommits ||
+              analysisRunning
+            "
+            (click)="
+              refreshCommits()
+            ">
+
+            Actualizar
+
+          </button>
+
+        </div>
+
+
+        <select
+          [(ngModel)]="selectedCommitSha"
+          [disabled]="
+            loadingCommits ||
+            analysisRunning ||
+            commits.length === 0
+          "
+          (ngModelChange)="
+            onCommitChange()
+          ">
+
+          @if (
+            loadingCommits
+          ) {
+
+            <option value="">
+
+              Cargando commits...
+
+            </option>
+
+          }
+          @else {
+
+            @for (
+              commit of commits;
+              track commit.sha
+            ) {
+
+              <option
+                [value]="commit.sha">
+
+                {{
+                  getCommitLabel(
+                    commit
+                  )
+                }}
+
+              </option>
+
+            }
+
+          }
+
+        </select>
+
+      </div>
+
+
+      <!--
+        SELECTED COMMIT
+      -->
+      @if (
+        selectedCommit
+      ) {
+
+        <div class="selected-commit">
+
+          <div class="commit-header">
+
+            <span class="commit-sha">
+
+              {{
+                selectedCommit.shortSha
+              }}
+
+            </span>
+
+
+            <span class="commit-date">
+
+              {{
+                selectedCommit.date
+                  | date:'dd/MM/yyyy HH:mm'
+              }}
+
+            </span>
+
+          </div>
+
+
+          <strong>
+
+            {{ selectedCommit.message }}
+
+          </strong>
+
+
+          <span class="commit-author">
+
+            {{
+              selectedCommit.authorName
+            }}
+
+          </span>
+
+        </div>
+
+      }
+
+
+      <!--
+        IMPACT INFO
+      -->
+      @if (
+        analysisType ===
+        'impact'
+      ) {
+
+        <div class="impact-info">
+
+          <div class="impact-icon">
+            ↗
+          </div>
+
+
+          <div>
+
+            <strong>
+              Impact Analysis
+            </strong>
+
+            <span>
+
+              Además del diff, se buscarán archivos
+              relacionados para identificar posibles
+              efectos secundarios o regresiones.
+
+            </span>
+
+          </div>
+
+        </div>
+
+      }
+
+
+      <!--
+        ERROR
+      -->
+      @if (
+        errorMessage
+      ) {
+
+        <div class="error-message">
+
+          {{ errorMessage }}
+
+        </div>
+
+      }
+
+
+      <!--
+        BUTTON
+      -->
+      <button
+        type="button"
+        class="analyze-button"
+        [class.impact-button]="
+          analysisType ===
+          'impact'
+        "
+        [disabled]="
+          analysisRunning ||
+          !selectedProjectId ||
+          !selectedBranch ||
+          !selectedCommitSha
+        "
+        (click)="
+          startAnalysis()
+        ">
+
+        @if (
+          analysisRunning
+        ) {
+
+          <span class="spinner"></span>
+
+          Analizando...
+
+        }
+        @else {
+
+          @if (
+            analysisType ===
+            'impact'
+          ) {
+
+            Analizar impacto y regresiones
+
+          }
+          @else {
+
+            Analizar commit
+
+          }
+
+        }
+
+      </button>
+
+    </div>
+
+
+    <!-- RIGHT -->
+    <div class="pipeline-panel">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h3>
+            Pipeline de análisis
+          </h3>
+
+          <span>
+            Proceso que ejecutará Code Intelligence.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- STEP 1 -->
+      <div class="pipeline-step active">
+
+        <div class="step-number">
+          1
+        </div>
+
+
+        <div class="step-content">
+
+          <strong>
+            GitHub Commit
+          </strong>
+
+          <span>
+            Obtención del commit seleccionado.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="pipeline-line"></div>
+
+
+      <!-- STEP 2 -->
+      <div class="pipeline-step active">
+
+        <div class="step-number">
+          2
+        </div>
+
+
+        <div class="step-content">
+
+          <strong>
+            Git Diff
+          </strong>
+
+          <span>
+            Identificación de archivos y líneas modificadas.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="pipeline-line"></div>
+
+
+      <!-- STEP 3 -->
+      @if (
+        analysisType ===
+        'impact'
+      ) {
+
+        <div class="pipeline-step impact">
+
+          <div class="step-number">
+            3
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              Dependency Scan
+            </strong>
+
+            <span>
+              Búsqueda de código relacionado y posibles consumidores.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <!-- STEP 4 -->
+        <div class="pipeline-step ai">
+
+          <div class="step-number">
+            4
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              Gemini Impact Review
+            </strong>
+
+            <span>
+              Análisis de regresiones y efectos secundarios.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <!-- STEP 5 -->
+        <div class="pipeline-step">
+
+          <div class="step-number">
+            5
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              Findings
+            </strong>
+
+            <span>
+              Generación de riesgos y recomendaciones.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <!-- STEP 6 -->
+        <div class="pipeline-step">
+
+          <div class="step-number">
+            6
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              SQL Server
+            </strong>
+
+            <span>
+              Persistencia del análisis y findings.
+            </span>
+
+          </div>
+
+        </div>
+
+      }
+      @else {
+
+        <!-- STEP 3 -->
+        <div class="pipeline-step ai">
+
+          <div class="step-number">
+            3
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              Gemini AI Review
+            </strong>
+
+            <span>
+              Revisión inteligente del código modificado.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <!-- STEP 4 -->
+        <div class="pipeline-step">
+
+          <div class="step-number">
+            4
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              Findings
+            </strong>
+
+            <span>
+              Generación de riesgos y recomendaciones.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="pipeline-line"></div>
+
+
+        <!-- STEP 5 -->
+        <div class="pipeline-step">
+
+          <div class="step-number">
+            5
+          </div>
+
+
+          <div class="step-content">
+
+            <strong>
+              SQL Server
+            </strong>
+
+            <span>
+              Persistencia del análisis.
+            </span>
+
+          </div>
+
+        </div>
+
+      }
+
+    </div>
+
+  </div>
+
+
+  <!--
+    RUNNING
+  -->
+  @if (
+    analysisRunning
+  ) {
+
+    <div class="running-panel">
+
+      <div class="running-spinner"></div>
+
+
+      <div>
+
+        @if (
+          analysisType ===
+          'impact'
+        ) {
+
+          <strong>
+            Analizando impacto del commit...
+          </strong>
+
+
+          <span>
+            Buscando posibles dependencias,
+            consumidores y regresiones.
+          </span>
+
+        }
+        @else {
+
+          <strong>
+            Analizando commit...
+          </strong>
+
+
+          <span>
+            Gemini está revisando los cambios.
+          </span>
+
+        }
+
+      </div>
+
+    </div>
+
+  }
+
+
+  <!--
+    RESULTS
+  -->
+  @if (
+    analysisResult
+  ) {
+
+    <div class="results-section">
+
+
+      <div class="results-header">
+
+        <div>
+
+          <h3>
+
+            @if (
+              analysisType ===
+              'impact'
+            ) {
+
+              Resultado de Impact Analysis
+
+            }
+            @else {
+
+              Resultado del análisis
+
+            }
+
+          </h3>
+
+
+          <span>
+
+            {{
+              analysisResult.projectName
+            }}
+
+            ·
+
+            {{
+              analysisResult.branch
+            }}
+
+          </span>
+
+        </div>
+
+
+        <div class="model-badge">
+
+          {{
+            analysisResult.modelName
+          }}
+
+        </div>
+
+      </div>
+
+
+      <!--
+        METRICS
+      -->
+      <div class="result-metrics">
+
+
+        <div class="result-metric">
+
+          <span>
+            Code Health
+          </span>
+
+          <strong class="health-score">
+
+            {{
+              analysisResult.codeHealth
+            }}%
+
+          </strong>
+
+        </div>
+
+
+        <div class="result-metric">
+
+          <span>
+            Risk Level
+          </span>
+
+          <strong
+            [class.risk-critical]="
+              analysisResult.riskLevel ===
+              'Critical'
+            "
+            [class.risk-high]="
+              analysisResult.riskLevel ===
+              'High'
+            "
+            [class.risk-medium]="
+              analysisResult.riskLevel ===
+              'Medium'
+            "
+            [class.risk-low]="
+              analysisResult.riskLevel ===
+              'Low'
+            ">
+
+            {{
+              analysisResult.riskLevel
+            }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="result-metric">
+
+          <span>
+            Findings
+          </span>
+
+          <strong>
+
+            {{
+              analysisResult
+                .findings
+                .length
+            }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="result-metric">
+
+          <span>
+            Commit
+          </span>
+
+          <strong class="result-sha">
+
+            {{
+              analysisResult
+                .commitSha
+                .substring(
+                  0,
+                  8
+                )
+            }}
+
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!--
+        SUMMARY
+      -->
+      <div class="summary-panel">
+
+        <div class="summary-title">
+
+          <span class="gemini-dot"></span>
+
+          <strong>
+            Resumen Gemini
+          </strong>
+
+        </div>
+
+
+        <p>
+
+          {{
+            analysisResult.summary
+          }}
+
+        </p>
+
+      </div>
+
+
+      <!--
+        FINDING COUNTS
+      -->
+      <div class="severity-grid">
+
+
+        <div class="severity-card critical">
+
+          <span>
+            Critical
+          </span>
+
+          <strong>
+
+            {{ criticalCount }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="severity-card high">
+
+          <span>
+            High
+          </span>
+
+          <strong>
+
+            {{ highCount }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="severity-card medium">
+
+          <span>
+            Medium
+          </span>
+
+          <strong>
+
+            {{ mediumCount }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="severity-card low">
+
+          <span>
+            Low
+          </span>
+
+          <strong>
+
+            {{ lowCount }}
+
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!--
+        FINDINGS
+      -->
+      @if (
+        analysisResult.findings.length > 0
+      ) {
+
+        <div class="findings-title">
+
+          <h3>
+            Findings detectados
+          </h3>
+
+
+          <span>
+
+            {{
+              analysisResult
+                .findings
+                .length
+            }}
+
+            resultados
+
+          </span>
+
+        </div>
+
+
+        <div class="findings-list">
+
+          @for (
+            finding of
+              analysisResult.findings;
+            track $index
+          ) {
+
+            <div
+              class="finding-card"
+              [class.critical]="
+                finding.severity ===
+                'Critical'
+              "
+              [class.high]="
+                finding.severity ===
+                'High'
+              "
+              [class.medium]="
+                finding.severity ===
+                'Medium'
+              "
+              [class.low]="
+                finding.severity ===
+                'Low'
+              ">
+
+
+              <div class="finding-header">
+
+                <div class="finding-tags">
+
+                  <span class="severity-badge">
+
+                    {{
+                      finding.severity
+                    }}
+
+                  </span>
+
+
+                  <span class="category-badge">
+
+                    {{
+                      finding.category
+                    }}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <h4>
+
+                {{ finding.title }}
+
+              </h4>
+
+
+              <p>
+
+                {{
+                  finding.description
+                }}
+
+              </p>
+
+
+              @if (
+                finding.filePath
+              ) {
+
+                <div class="finding-file">
+
+                  {{
+                    finding.filePath
+                  }}
+
+                  @if (
+                    finding.lineNumber
+                  ) {
+
+                    <span>
+
+                      :{{
+                        finding.lineNumber
+                      }}
+
+                    </span>
+
+                  }
+
+                </div>
+
+              }
+
+
+              @if (
+                finding.suggestion
+              ) {
+
+                <div class="suggestion">
+
+                  <strong>
+                    Sugerencia
+                  </strong>
+
+
+                  <p>
+
+                    {{
+                      finding.suggestion
+                    }}
+
+                  </p>
+
+                </div>
+
+              }
+
+            </div>
+
+          }
+
+        </div>
+
+      }
+      @else {
+
+        <div class="no-findings">
+
+          <div class="success-icon">
+            ✓
+          </div>
+
+
+          <strong>
+            No se detectaron findings
+          </strong>
+
+
+          <span>
+
+            No se encontraron problemas relevantes
+            durante este análisis.
+
+          </span>
+
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+</div>

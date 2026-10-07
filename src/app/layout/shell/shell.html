@@ -1,0 +1,73 @@
+<div class="app-layout">
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">CI</div>
+
+      <div>
+        <h2>Code Intelligence</h2>
+        <span>Analyzer Dashboard</span>
+      </div>
+    </div>
+
+    <nav>
+      <a routerLink="/dashboard" routerLinkActive="active">
+        Dashboard
+      </a>
+
+      <a routerLink="/projects" routerLinkActive="active">
+        Proyectos
+      </a>
+
+      <a routerLink="/analysis" routerLinkActive="active">
+        Análisis
+      </a>
+
+      <a routerLink="/commits" routerLinkActive="active">
+        Commits
+      </a>
+
+      <a routerLink="/findings" routerLinkActive="active">
+        Findings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>Analyzer</span>
+      <strong>v0.1</strong>
+    </div>
+
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div>
+        <h1>Code Intelligence</h1>
+        <p>Project Analyzer</p>
+      </div>
+
+      <div class="user">
+
+        <div class="user-avatar">
+          RG
+        </div>
+
+        <div>
+          <strong>Ruben Gamez</strong>
+          <span>Developer</span>
+        </div>
+
+      </div>
+
+    </header>
+
+    <section class="content">
+      <router-outlet></router-outlet>
+    </section>
+
+  </main>
+
+</div>

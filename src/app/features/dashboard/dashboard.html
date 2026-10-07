@@ -1,0 +1,715 @@
+<div class="dashboard-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+
+    <div>
+
+      <h2>
+        Dashboard
+      </h2>
+
+      <p>
+        Resumen general de análisis
+        de tus proyectos.
+      </p>
+
+    </div>
+
+
+    <a
+      class="analyze-button"
+      routerLink="/analysis">
+
+      + Analizar proyecto
+
+    </a>
+
+  </div>
+
+
+  @if (loading) {
+
+    <div class="message-panel">
+
+      Cargando dashboard...
+
+    </div>
+
+  }
+
+
+  @if (errorMessage) {
+
+    <div class="message-panel error">
+
+      {{ errorMessage }}
+
+    </div>
+
+  }
+
+
+  @if (data) {
+
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+
+
+      <div class="metric-card">
+
+        <span>
+          Code Health
+        </span>
+
+
+        <strong class="health">
+
+          {{ data.metrics.codeHealth }}%
+
+        </strong>
+
+
+        <small>
+          Estado general del código
+        </small>
+
+      </div>
+
+
+      <div class="metric-card">
+
+        <span>
+          Proyectos
+        </span>
+
+
+        <strong>
+
+          {{ data.metrics.projects }}
+
+        </strong>
+
+
+        <small>
+          Repositorios activos
+        </small>
+
+      </div>
+
+
+      <div class="metric-card">
+
+        <span>
+          Findings
+        </span>
+
+
+        <strong>
+
+          {{ data.metrics.findings }}
+
+        </strong>
+
+
+        <small>
+          Pendientes por revisar
+        </small>
+
+      </div>
+
+
+      <div class="metric-card">
+
+        <span>
+          Commits
+        </span>
+
+
+        <strong>
+
+          {{ data.metrics.commits }}
+
+        </strong>
+
+
+        <small>
+          Commits analizados
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- LAST PROJECT -->
+    @if (data.lastAnalysis) {
+
+      <div class="project-card">
+
+        <div>
+
+          <span class="section-label">
+            Último proyecto analizado
+          </span>
+
+
+          <div class="project-info">
+
+            <div class="project-avatar">
+
+              {{
+                data.lastAnalysis
+                  .projectName
+                  .substring(
+                    0,
+                    2
+                  )
+                  .toUpperCase()
+              }}
+
+            </div>
+
+
+            <div>
+
+              <strong>
+
+                {{
+                  data.lastAnalysis
+                    .projectName
+                }}
+
+              </strong>
+
+
+              <span>
+
+                {{
+                  data.lastAnalysis
+                    .branchName
+                }}
+
+              </span>
+
+
+              <div class="technologies">
+
+                @for (
+                  technology of
+                    data.lastAnalysis
+                      .technologies ?? [];
+                  track technology
+                ) {
+
+                  <span>
+
+                    {{ technology }}
+
+                  </span>
+
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="project-right">
+
+          <span class="provider">
+
+            {{
+              data.lastAnalysis.provider
+            }}
+
+          </span>
+
+
+          <a
+            routerLink="/projects">
+
+            Ver proyectos
+
+          </a>
+
+        </div>
+
+      </div>
+
+    }
+
+
+    <!-- MAIN DATA -->
+    @if (data.lastAnalysis) {
+
+      <div class="content-grid">
+
+
+        <!-- LAST ANALYSIS -->
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                Último análisis
+              </h3>
+
+              <span>
+                Analysis
+                #{{ data.lastAnalysis.id }}
+              </span>
+
+            </div>
+
+
+            <span class="model">
+
+              {{
+                data.lastAnalysis
+                  .modelName
+              }}
+
+            </span>
+
+          </div>
+
+
+          <div class="analysis-row">
+
+            <span>
+              Commit
+            </span>
+
+            <strong class="sha">
+
+              {{
+                shortSha(
+                  data.lastAnalysis
+                    .commitSha
+                )
+              }}
+
+            </strong>
+
+          </div>
+
+
+          <div class="analysis-row">
+
+            <span>
+              Rama
+            </span>
+
+            <strong>
+
+              {{
+                data.lastAnalysis
+                  .branchName
+              }}
+
+            </strong>
+
+          </div>
+
+
+          <div class="analysis-row">
+
+            <span>
+              Archivos modificados
+            </span>
+
+            <strong>
+
+              {{
+                data.lastAnalysis
+                  .filesChanged
+              }}
+
+            </strong>
+
+          </div>
+
+
+          <div class="analysis-row">
+
+            <span>
+              Líneas
+            </span>
+
+            <strong>
+
+              <span class="added">
+
+                +{{
+                  data.lastAnalysis
+                    .linesAdded
+                }}
+
+              </span>
+
+              &nbsp;
+
+              <span class="removed">
+
+                -{{
+                  data.lastAnalysis
+                    .linesRemoved
+                }}
+
+              </span>
+
+            </strong>
+
+          </div>
+
+
+          <div class="analysis-row">
+
+            <span>
+              Riesgo
+            </span>
+
+            <strong
+              [class.risk-critical]="
+                data.lastAnalysis.riskLevel ===
+                'Critical'
+              "
+              [class.risk-high]="
+                data.lastAnalysis.riskLevel ===
+                'High'
+              "
+              [class.risk-medium]="
+                data.lastAnalysis.riskLevel ===
+                'Medium'
+              "
+              [class.risk-low]="
+                data.lastAnalysis.riskLevel ===
+                'Low'
+              ">
+
+              {{
+                data.lastAnalysis
+                  .riskLevel
+              }}
+
+            </strong>
+
+          </div>
+
+
+          @if (
+            data.lastAnalysis.completedAt
+          ) {
+
+            <div class="analysis-row">
+
+              <span>
+                Analizado
+              </span>
+
+              <strong>
+
+                {{
+                  data.lastAnalysis
+                    .completedAt
+                    | date:'dd/MM/yyyy HH:mm'
+                }}
+
+              </strong>
+
+            </div>
+
+          }
+
+        </div>
+
+
+        <!-- CODE HEALTH -->
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                Calidad del código
+              </h3>
+
+              <span>
+                Últimos análisis
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="health-container">
+
+            <div class="health-circle">
+
+              {{
+                data.metrics
+                  .codeHealth
+              }}
+
+            </div>
+
+
+            <div>
+
+              <strong>
+                Code Health
+              </strong>
+
+              <span>
+                {{ healthText }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="health-bar">
+
+            <div
+              class="health-progress"
+              [style.width.%]="
+                data.metrics.codeHealth
+              ">
+
+            </div>
+
+          </div>
+
+
+          <!-- FINDINGS SUMMARY -->
+          <div class="finding-summary">
+
+            <div class="critical">
+
+              <span>
+                Critical
+              </span>
+
+              <strong>
+
+                {{
+                  data.findingsSummary
+                    .critical
+                }}
+
+              </strong>
+
+            </div>
+
+
+            <div class="high">
+
+              <span>
+                High
+              </span>
+
+              <strong>
+
+                {{
+                  data.findingsSummary
+                    .high
+                }}
+
+              </strong>
+
+            </div>
+
+
+            <div class="medium">
+
+              <span>
+                Medium
+              </span>
+
+              <strong>
+
+                {{
+                  data.findingsSummary
+                    .medium
+                }}
+
+              </strong>
+
+            </div>
+
+
+            <div class="low">
+
+              <span>
+                Low
+              </span>
+
+              <strong>
+
+                {{
+                  data.findingsSummary
+                    .low
+                }}
+
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+    @else {
+
+      <div class="empty-dashboard">
+
+        <strong>
+          Todavía no existen análisis
+        </strong>
+
+        <span>
+          Analiza tu primer commit para
+          comenzar a llenar el dashboard.
+        </span>
+
+
+        <a
+          routerLink="/analysis">
+
+          Ir a análisis
+
+        </a>
+
+      </div>
+
+    }
+
+
+    <!-- RECENT -->
+    @if (
+      data.recentAnalyses.length > 0
+    ) {
+
+      <div class="recent-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3>
+              Análisis recientes
+            </h3>
+
+            <span>
+              Últimos commits revisados
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="recent-header">
+
+          <span>
+            Proyecto
+          </span>
+
+          <span>
+            Commit
+          </span>
+
+          <span>
+            Code Health
+          </span>
+
+          <span>
+            Riesgo
+          </span>
+
+          <span>
+            Findings
+          </span>
+
+        </div>
+
+
+        @for (
+          analysis of
+            data.recentAnalyses;
+          track analysis.id
+        ) {
+
+          <div class="recent-row">
+
+            <strong>
+
+              {{
+                analysis.projectName
+              }}
+
+            </strong>
+
+
+            <span class="sha">
+
+              {{
+                shortSha(
+                  analysis.commitSha
+                )
+              }}
+
+            </span>
+
+
+            <span>
+
+              {{
+                analysis.codeHealth
+              }}%
+
+            </span>
+
+
+            <span>
+
+              {{
+                analysis.riskLevel
+              }}
+
+            </span>
+
+
+            <span>
+
+              {{
+                analysis.findingCount
+              }}
+
+            </span>
+
+          </div>
+
+        }
+
+      </div>
+
+    }
+
+  }
+
+</div>

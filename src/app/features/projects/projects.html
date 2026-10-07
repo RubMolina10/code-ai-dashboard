@@ -1,0 +1,569 @@
+<div class="projects-page">
+
+  <div class="page-header">
+
+    <div>
+
+      <h2>
+        Proyectos
+      </h2>
+
+      <p>
+        Administra los repositorios disponibles para análisis.
+      </p>
+
+    </div>
+
+
+    <button
+      class="primary-button"
+      (click)="openCreateModal()">
+
+      + Agregar proyecto
+
+    </button>
+
+  </div>
+
+
+  <!-- RESUMEN -->
+
+  <div class="summary">
+
+    <div class="summary-card">
+
+      <span>
+        Proyectos
+      </span>
+
+      <strong>
+        {{ projects.length }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>
+        Corporativos
+      </span>
+
+      <strong>
+        {{ corporateCount }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>
+        Personales
+      </span>
+
+      <strong>
+        {{ personalCount }}
+      </strong>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <span>
+        Activos
+      </span>
+
+      <strong>
+        {{ activeCount }}
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- MENSAJES -->
+
+  @if (loading) {
+
+    <div class="message-panel">
+
+      Cargando proyectos...
+
+    </div>
+
+  }
+
+
+  @if (errorMessage) {
+
+    <div class="message-panel error">
+
+      {{ errorMessage }}
+
+    </div>
+
+  }
+
+
+  @if (!loading && projects.length === 0) {
+
+    <div class="message-panel">
+
+      No existen proyectos registrados.
+
+    </div>
+
+  }
+
+
+  <!-- PROJECT CARDS -->
+
+  <div class="projects-grid">
+
+    @for (project of projects; track project.id) {
+
+      <div
+        class="project-card"
+        [class.selected]="selectedProject?.id === project.id"
+        (click)="selectProject(project)">
+
+
+        <div class="project-top">
+
+          <div class="project-icon">
+
+            {{ project.name.substring(0, 2).toUpperCase() }}
+
+          </div>
+
+
+          <div class="project-actions">
+
+            <div class="badges">
+
+              <span class="badge provider">
+
+                {{ project.provider }}
+
+              </span>
+
+
+              <span
+                class="badge"
+                [class.corporate]="project.projectType === 'Corporate'"
+                [class.personal]="project.projectType === 'Personal'">
+
+                {{ project.projectType }}
+
+              </span>
+
+            </div>
+
+
+            <button
+              class="delete-project-button"
+              title="Eliminar proyecto"
+              (click)="deleteProject(project, $event)">
+
+              Eliminar
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <h3>
+          {{ project.name }}
+        </h3>
+
+
+        <p class="description">
+
+          {{
+            project.description ||
+            'Sin descripción'
+          }}
+
+        </p>
+
+
+        <div class="branch">
+
+          <span>
+            Rama
+          </span>
+
+          <strong>
+
+            {{
+              project.defaultBranch ||
+              'Sin configurar'
+            }}
+
+          </strong>
+
+        </div>
+
+
+        <div class="technologies">
+
+          @for (
+            tech of project.technologies;
+            track tech
+          ) {
+
+            <span>
+              {{ tech }}
+            </span>
+
+          }
+
+        </div>
+
+
+        <div class="project-footer">
+
+          @if (project.active) {
+
+            <span class="active">
+
+              ● Active
+
+            </span>
+
+          }
+          @else {
+
+            <span>
+
+              ● Inactive
+
+            </span>
+
+          }
+
+
+          <span>
+
+            {{ project.provider }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+
+  <!-- MODAL CREAR PROYECTO -->
+
+  @if (showCreateModal) {
+
+    <div
+      class="modal-backdrop"
+      (click)="closeCreateModal()">
+
+      <div
+        class="modal"
+        (click)="$event.stopPropagation()">
+
+
+        <div class="modal-header">
+
+          <div>
+
+            <h3>
+              Agregar proyecto
+            </h3>
+
+            <span>
+              Registra un proyecto para analizarlo.
+            </span>
+
+          </div>
+
+
+          <button
+            class="close-button"
+            (click)="closeCreateModal()">
+
+            ×
+
+          </button>
+
+        </div>
+
+
+        <!-- NOMBRE -->
+
+        <div class="form-group">
+
+          <label>
+            Nombre
+          </label>
+
+          <input
+            [(ngModel)]="newProject.name"
+            placeholder="Code AI Dashboard">
+
+        </div>
+
+
+        <!-- DESCRIPCIÓN -->
+
+        <div class="form-group">
+
+          <label>
+            Descripción
+          </label>
+
+          <textarea
+            [(ngModel)]="newProject.description"
+            placeholder="Descripción del proyecto">
+          </textarea>
+
+        </div>
+
+
+        <!-- TIPO / PROVIDER -->
+
+        <div class="form-row">
+
+          <div class="form-group">
+
+            <label>
+              Tipo
+            </label>
+
+            <select
+              [(ngModel)]="newProject.projectType">
+
+              <option value="Personal">
+                Personal
+              </option>
+
+              <option value="Corporate">
+                Corporate
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Provider
+            </label>
+
+            <select
+              [(ngModel)]="newProject.provider"
+              (ngModelChange)="onProviderChange()">
+
+              <option value="Local">
+                Local
+              </option>
+
+              <option value="GitHub">
+                GitHub
+              </option>
+
+              <option value="Gitea">
+                Gitea
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <!-- LOCAL -->
+
+        @if (
+          newProject.provider === 'Local'
+        ) {
+
+          <div class="form-group">
+
+            <label>
+              Ruta local
+            </label>
+
+            <input
+              [(ngModel)]="newProject.localPath"
+              placeholder="C:\Projects\MyProject">
+
+          </div>
+
+        }
+
+
+        <!-- REMOTE REPOSITORY -->
+
+        @if (
+          newProject.provider !== 'Local'
+        ) {
+
+          <div class="form-group">
+
+            <label>
+              Repository URL
+            </label>
+
+
+            <div class="repository-input-row">
+
+              <input
+                [(ngModel)]="newProject.repositoryUrl"
+                placeholder="https://github.com/usuario/repositorio">
+
+
+              @if (
+                newProject.provider === 'GitHub'
+              ) {
+
+                <button
+                  type="button"
+                  class="branch-button"
+                  [disabled]="loadingBranches"
+                  (click)="loadGithubBranches()">
+
+                  @if (loadingBranches) {
+
+                    Buscando...
+
+                  }
+                  @else {
+
+                    Buscar ramas
+
+                  }
+
+                </button>
+
+              }
+
+            </div>
+
+
+            @if (branchError) {
+
+              <small class="branch-error">
+
+                {{ branchError }}
+
+              </small>
+
+            }
+
+          </div>
+
+        }
+
+
+        <!-- RAMA -->
+
+        <div class="form-group">
+
+          <label>
+            Rama por defecto
+          </label>
+
+
+          @if (
+            newProject.provider === 'GitHub'
+            &&
+            githubBranches.length > 0
+          ) {
+
+            <select
+              [(ngModel)]="newProject.defaultBranch">
+
+              @for (
+                branch of githubBranches;
+                track branch.sha
+              ) {
+
+                <option
+                  [value]="branch.name">
+
+                  {{ branch.name }}
+
+                </option>
+
+              }
+
+            </select>
+
+          }
+          @else {
+
+            <input
+              [(ngModel)]="newProject.defaultBranch"
+              placeholder="main">
+
+          }
+
+        </div>
+
+
+        <!-- TECNOLOGÍAS -->
+
+        <div class="form-group">
+
+          <label>
+            Tecnologías
+          </label>
+
+          <input
+            [(ngModel)]="newProject.technologiesText"
+            placeholder=".NET 8, Vue, MongoDB, SQL Server">
+
+          <small>
+            Sepáralas con comas.
+          </small>
+
+        </div>
+
+
+        <!-- ACCIONES -->
+
+        <div class="modal-actions">
+
+          <button
+            class="cancel-button"
+            (click)="closeCreateModal()">
+
+            Cancelar
+
+          </button>
+
+
+          <button
+            class="primary-button"
+            (click)="saveProject()">
+
+            Guardar proyecto
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>

@@ -1,0 +1,672 @@
+<div class="findings-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+
+    <div>
+
+      <h2>
+        Findings
+      </h2>
+
+      <p>
+        Riesgos y problemas detectados
+        durante los análisis de código.
+      </p>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="refresh-button"
+      [disabled]="loading"
+      (click)="loadFindings()">
+
+      Actualizar
+
+    </button>
+
+  </div>
+
+
+  <!-- METRICS -->
+  <div class="metrics-grid">
+
+
+    <div class="metric-card">
+
+      <span>
+        Findings
+      </span>
+
+      <strong>
+        {{ totalCount }}
+      </strong>
+
+    </div>
+
+
+    <div class="metric-card critical">
+
+      <span>
+        Critical
+      </span>
+
+      <strong>
+        {{ criticalCount }}
+      </strong>
+
+    </div>
+
+
+    <div class="metric-card high">
+
+      <span>
+        High
+      </span>
+
+      <strong>
+        {{ highCount }}
+      </strong>
+
+    </div>
+
+
+    <div class="metric-card open">
+
+      <span>
+        Pendientes
+      </span>
+
+      <strong>
+        {{ openCount }}
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- FILTERS -->
+  <div class="filters-panel">
+
+
+    <!-- PROJECT -->
+    <div class="form-group">
+
+      <label>
+        Proyecto
+      </label>
+
+
+      <select
+        [(ngModel)]="selectedProjectId"
+        (ngModelChange)="onFilterChange()">
+
+        <option
+          [ngValue]="null">
+
+          Todos
+
+        </option>
+
+
+        @for (
+          project of projects;
+          track project.id
+        ) {
+
+          <option
+            [ngValue]="project.id">
+
+            {{ project.name }}
+
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <!-- SEVERITY -->
+    <div class="form-group">
+
+      <label>
+        Severidad
+      </label>
+
+
+      <select
+        [(ngModel)]="selectedSeverity"
+        (ngModelChange)="onFilterChange()">
+
+        <option value="">
+          Todas
+        </option>
+
+        <option value="Critical">
+          Critical
+        </option>
+
+        <option value="High">
+          High
+        </option>
+
+        <option value="Medium">
+          Medium
+        </option>
+
+        <option value="Low">
+          Low
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- STATUS -->
+    <div class="form-group">
+
+      <label>
+        Estado
+      </label>
+
+
+      <select
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onFilterChange()">
+
+        <option value="">
+          Todos
+        </option>
+
+        <option value="New">
+          Pendiente
+        </option>
+
+        <option value="Resolved">
+          Resuelto
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="clear-button"
+      (click)="clearFilters()">
+
+      Limpiar filtros
+
+    </button>
+
+  </div>
+
+
+  @if (loading) {
+
+    <div class="message-panel">
+
+      Cargando findings...
+
+    </div>
+
+  }
+
+
+  @if (errorMessage) {
+
+    <div class="message-panel error">
+
+      {{ errorMessage }}
+
+    </div>
+
+  }
+
+
+  @if (
+    !loading &&
+    !errorMessage &&
+    findings.length === 0
+  ) {
+
+    <div class="empty-state">
+
+      <strong>
+        No hay findings
+      </strong>
+
+      <span>
+        No se encontraron hallazgos
+        con los filtros seleccionados.
+      </span>
+
+    </div>
+
+  }
+
+
+  <!-- FINDINGS -->
+  <div class="findings-list">
+
+    @for (
+      finding of findings;
+      track finding.id
+    ) {
+
+      <div
+        class="finding-card"
+        [class.critical]="
+          finding.severity === 'Critical'
+        "
+        [class.high]="
+          finding.severity === 'High'
+        "
+        [class.medium]="
+          finding.severity === 'Medium'
+        "
+        [class.low]="
+          finding.severity === 'Low'
+        "
+        [class.resolved]="
+          finding.status === 'Resolved'
+        "
+        (click)="openFinding(finding)">
+
+
+        <div class="finding-top">
+
+
+          <div class="finding-tags">
+
+            <span class="severity">
+
+              {{ finding.severity }}
+
+            </span>
+
+
+            <span class="category">
+
+              {{ finding.category }}
+
+            </span>
+
+
+            <span
+              class="status"
+              [class.status-resolved]="
+                finding.status === 'Resolved'
+              ">
+
+              {{
+                finding.status ===
+                  'Resolved'
+                  ? 'Resuelto'
+                  : 'Pendiente'
+              }}
+
+            </span>
+
+          </div>
+
+
+          <div class="finding-actions">
+
+            @if (
+              finding.status ===
+              'New'
+            ) {
+
+              <button
+                type="button"
+                class="resolve-button"
+                (click)="resolveFinding(
+                  finding,
+                  $event
+                )">
+
+                Resolver
+
+              </button>
+
+            }
+            @else {
+
+              <button
+                type="button"
+                class="reopen-button"
+                (click)="reopenFinding(
+                  finding,
+                  $event
+                )">
+
+                Reabrir
+
+              </button>
+
+            }
+
+          </div>
+
+        </div>
+
+
+        <h3>
+          {{ finding.title }}
+        </h3>
+
+
+        <p>
+          {{ finding.description }}
+        </p>
+
+
+        <div class="finding-location">
+
+          @if (finding.filePath) {
+
+            <span class="file-path">
+
+              {{ finding.filePath }}
+
+              @if (
+                finding.lineNumber
+              ) {
+
+                :{{ finding.lineNumber }}
+
+              }
+
+            </span>
+
+          }
+
+        </div>
+
+
+        <div class="finding-footer">
+
+
+          <div>
+
+            <strong>
+              {{ finding.projectName }}
+            </strong>
+
+            <span>
+              {{ finding.branchName }}
+            </span>
+
+          </div>
+
+
+          <div class="commit-info">
+
+            <span class="commit-sha">
+
+              {{ shortSha(
+                  finding.commitSha
+              ) }}
+
+            </span>
+
+
+            <span>
+
+              {{
+                finding.dateCreated
+                  | date:'dd/MM/yyyy HH:mm'
+              }}
+
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+
+  <!-- DETAIL MODAL -->
+  @if (
+    showDetailModal &&
+    selectedFinding
+  ) {
+
+    <div
+      class="modal-backdrop"
+      (click)="closeFinding()">
+
+
+      <div
+        class="finding-modal"
+        (click)="$event.stopPropagation()">
+
+
+        <div class="modal-header">
+
+          <div>
+
+            <span
+              class="severity modal-severity">
+
+              {{ selectedFinding.severity }}
+
+            </span>
+
+
+            <h3>
+
+              {{ selectedFinding.title }}
+
+            </h3>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="close-button"
+            (click)="closeFinding()">
+
+            ×
+
+          </button>
+
+        </div>
+
+
+        <div class="detail-grid">
+
+
+          <div>
+
+            <span class="detail-label">
+              Proyecto
+            </span>
+
+            <strong>
+
+              {{ selectedFinding.projectName }}
+
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span class="detail-label">
+              Rama
+            </span>
+
+            <strong>
+
+              {{ selectedFinding.branchName }}
+
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span class="detail-label">
+              Commit
+            </span>
+
+            <strong class="mono">
+
+              {{
+                shortSha(
+                  selectedFinding.commitSha
+                )
+              }}
+
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span class="detail-label">
+              Modelo
+            </span>
+
+            <strong>
+
+              {{ selectedFinding.modelName }}
+
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="detail-section">
+
+          <span class="detail-label">
+            Descripción
+          </span>
+
+          <p>
+
+            {{ selectedFinding.description }}
+
+          </p>
+
+        </div>
+
+
+        @if (
+          selectedFinding.filePath
+        ) {
+
+          <div class="detail-section">
+
+            <span class="detail-label">
+              Ubicación
+            </span>
+
+            <div class="modal-file">
+
+              {{ selectedFinding.filePath }}
+
+              @if (
+                selectedFinding.lineNumber
+              ) {
+
+                :{{ selectedFinding.lineNumber }}
+
+              }
+
+            </div>
+
+          </div>
+
+        }
+
+
+        <div
+          class="detail-section suggestion">
+
+          <span class="detail-label">
+            Sugerencia de Gemini
+          </span>
+
+          <p>
+
+            {{ selectedFinding.suggestion }}
+
+          </p>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+          @if (
+            selectedFinding.status ===
+            'New'
+          ) {
+
+            <button
+              type="button"
+              class="resolve-button large"
+              (click)="resolveFinding(
+                selectedFinding
+              )">
+
+              Marcar como resuelto
+
+            </button>
+
+          }
+          @else {
+
+            <button
+              type="button"
+              class="reopen-button large"
+              (click)="reopenFinding(
+                selectedFinding
+              )">
+
+              Reabrir finding
+
+            </button>
+
+          }
+
+
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="closeFinding()">
+
+            Cerrar
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>

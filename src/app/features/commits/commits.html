@@ -1,0 +1,264 @@
+<div class="commits-page">
+
+  <div class="page-header">
+
+    <div>
+
+      <h2>
+        Commits
+      </h2>
+
+      <p>
+        Historial real de cambios del repositorio.
+      </p>
+
+    </div>
+
+
+    <button
+      class="refresh-button"
+      [disabled]="loadingCommits"
+      (click)="refresh()">
+
+      Actualizar
+
+    </button>
+
+  </div>
+
+
+  <!-- SELECTORES -->
+
+  <div class="selectors-panel">
+
+
+    <!-- PROJECT -->
+
+    <div class="form-group">
+
+      <label>
+        Proyecto
+      </label>
+
+      <select
+        [(ngModel)]="selectedProjectId"
+        (ngModelChange)="onProjectChange()">
+
+        @for (
+          project of projects;
+          track project.id
+        ) {
+
+          <option
+            [ngValue]="project.id">
+
+            {{ project.name }}
+
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <!-- BRANCH -->
+
+    <div class="form-group">
+
+      <label>
+        Rama
+      </label>
+
+      <select
+        [(ngModel)]="selectedBranch"
+        [disabled]="loadingBranches"
+        (ngModelChange)="onBranchChange()">
+
+        @for (
+          branch of branches;
+          track branch.sha
+        ) {
+
+          <option
+            [value]="branch.name">
+
+            {{ branch.name }}
+
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+  @if (loadingProjects) {
+
+    <div class="message-panel">
+      Cargando proyectos...
+    </div>
+
+  }
+
+
+  @if (loadingBranches) {
+
+    <div class="message-panel">
+      Cargando ramas...
+    </div>
+
+  }
+
+
+  @if (loadingCommits) {
+
+    <div class="message-panel">
+
+      Cargando commits de
+      <strong>
+        {{ selectedBranch }}
+      </strong>
+      ...
+
+    </div>
+
+  }
+
+
+  @if (errorMessage) {
+
+    <div class="message-panel error">
+
+      {{ errorMessage }}
+
+    </div>
+
+  }
+
+
+  @if (
+    !loadingCommits &&
+    !errorMessage &&
+    commits.length === 0
+  ) {
+
+    <div class="message-panel">
+
+      No hay commits disponibles.
+
+    </div>
+
+  }
+
+
+  <!-- COMMITS -->
+
+  @if (commits.length > 0) {
+
+    <div class="panel">
+
+
+      <div class="commit-header">
+
+        <span>
+          Commit
+        </span>
+
+        <span>
+          Información
+        </span>
+
+        <span>
+          Fecha
+        </span>
+
+        <span>
+          Acción
+        </span>
+
+      </div>
+
+
+      @for (
+        commit of commits;
+        track commit.sha
+      ) {
+
+        <div class="commit-row">
+
+
+          <div class="sha">
+
+            {{ commit.shortSha }}
+
+          </div>
+
+
+          <div class="commit-information">
+
+            <strong>
+
+              {{ commit.message }}
+
+            </strong>
+
+            <span>
+
+              {{ commit.authorName }}
+
+            </span>
+
+            @if (
+              commit.authorEmail
+            ) {
+
+              <small>
+
+                {{ commit.authorEmail }}
+
+              </small>
+
+            }
+
+          </div>
+
+
+          <div class="commit-date">
+
+            {{
+              commit.date
+                ? (commit.date | date:'dd/MM/yyyy HH:mm')
+                : '-'
+            }}
+
+          </div>
+
+
+          <div>
+
+            <a
+              class="github-link"
+              [href]="commit.url"
+              target="_blank"
+              rel="noopener noreferrer">
+
+              Ver GitHub
+
+            </a>
+
+          </div>
+
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+</div>
