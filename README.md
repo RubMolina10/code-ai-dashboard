@@ -1,13 +1,15 @@
 # Dependencies
 node_modules/
 
-# Build
+# Angular build output
 dist/
+out-tsc/
+.angular/
 
-# Environment
-.env
-.env.*
-!.env.example
+# Cache
+.cache/
+.tmp/
+temp/
 
 # Logs
 logs/
@@ -17,13 +19,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Cache
-.cache/
-.tmp/
-temp/
+# Environment files
+.env
+.env.*
+!.env.example
 
-# TypeScript
-*.tsbuildinfo
+# Angular local environment
+src/environments/environment.local.ts
+src/environments/environment.*.local.ts
 
 # IDEs
 .vscode/*
@@ -32,12 +35,26 @@ temp/
 
 .idea/
 *.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 *.user
 
 # OS files
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Package managers
+.pnpm-store/
 
 # Misc
 *.tmp
